@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDFProtector</title>
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='favicon/apple-touch-icon.png') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon/favicon-32x32.png') }}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon/favicon-16x16.png') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='favicon/site.webmanifest') }}">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+  <header>
+    <a href="{{ url_for('index') }}">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo do PDFProtector">
+    </a>    
+  </header>
+
+  <main>
+    <p id="chamada-acao">Faça o upload de seu PDF e ative proteções contra pirataria, como marca d'água, senha, entre outros.</p>
+    <form method="POST" enctype="multipart/form-data">
+      {{ form.hidden_tag() }}
+
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="errors_container"> 
+              {% for message in messages %}
+              <p class="error">{{ message }}</p>
+              {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <div class="upload-container" id="drop-area">
+        <div id="selectPDF-container">
+          <p>Arraste seu PDF aqui<br>ou</p>
+          {{ form.arquivo_pdf(class="hidden-input", id="fileElem", accept="application/pdf") }}
+          <label for="fileElem" class="upload-button">Selecionar PDF</label>
+        </div>
+        <div id="filename-container" style="display: none;">
+          <span id="filename"></span>
+          <a id="remove-pdf">&times;</a>
+        </div>
+      </div>
+
+      <div id="protect-options">
+        <label class="protect-option" id="markwater_option">
+          {{ form.chk_watermark(id="chk_marca", checked=True) }}
+          <i class="fa-solid fa-lock-open lock"></i>
+          {{ form.chk_watermark.label.text }}
+        </label>
+        <label class="protect-option" id="password_option">
+          {{ form.chk_password(id="chk_senha") }}
+          <i class="fa-solid fa-lock-open lock"></i>
+          {{ form.chk_password.label.text }}
+        </label>
+        <label class="protect-option" id="metadata_option">
+          {{ form.chk_metadata(id="chk_meta") }}
+          <i class="fa-solid fa-lock-open lock"></i>
+          {{ form.chk_metadata.label.text }}
+        </label>
+        <label class="protect-option" id="permissions_option">
+          {{ form.chk_permissions(id="chk_perm") }}
+          <i class="fa-solid fa-lock-open lock"></i>
+          {{ form.chk_permissions.label.text }}
+        </label>
+      </div>
+
+      <div id="datas_for_options">
+        <div id="watermark_container" class="data_for_option" style="display: block;">
+          <h3 class="datas_for_options__title">Marca d'água</h3>
+          <div class="input-group">
+            <span class="label-form">{{ form.watermark_text.label.text }}</span>
+            {{ form.watermark_text(class="input", maxlength="30") }}
+          </div>
+          <div class="input-group">
+            <span class="label-form">{{ form.watermark_position.label.text }}</span>
+            {{ form.watermark_position(class="input") }}
+          </div>
+          <div class="input-group">
+            <span class="label-form">{{ form.watermark_color.label.text }}</span>
+            {{ form.watermark_color(class="input input-color") }}
+          </div>
+          <div class="input-group">
+            <span class="label-form">{{ form.not_insert_watermark_first_page.label.text }}</span>
+            {{ form.not_insert_watermark_first_page(class="checkbox")}}
+          </div>
+        </div>
+
+        <div id="password_container" class="data_for_option" style="display: none;">
+          <h3 class="datas_for_options__title">Senha</h3>
+          <div class="input-group">
+            <span class="label-form">{{ form.password_pdf.label.text }}</span>
+            {{ form.password_pdf(class="input") }}
+          </div>
+        </div>
+
+        <div id="metadata_container" class="data_for_option" style="display: none;">
+          <h3 class="datas_for_options__title">Metadados</h3>
+          <p class="datas_for_options__subtitle">Insira as chaves e seus respectivos valores separados por ponto e vírgula (;)</p>
+          <div id="input_groups_metadata">
+            <div class="input-group">
+              <span class="label-form">{{ form.metadatas_keys.label.text }}</span>
+              {{ form.metadatas_keys(class="input") }}
+            </div>
+            <div class="input-group">
+              <span class="label-form">{{ form.metadatas_values.label.text }}</span>
+              {{ form.metadatas_values(class="input") }}
+            </div>
+          </div>
+        </div>
+
+        <div id="permissions_container" class="data_for_option" style="display: none;">
+          <h3 class="datas_for_options__title">Permissões</h3>
+          <div class="input-group">
+            <span class="label-form">{{ form.block_printing.label.text }}</span>
+            {{ form.block_printing(class="checkbox")}}
+          </div>
+          <div class="input-group">
+            <span class="label-form">{{ form.block_copy.label.text }}</span>
+            {{ form.block_copy(class="checkbox")}}
+          </div>
+          <div class="input-group">
+            <span class="label-form">{{ form.block_editing.label.text }}</span>
+            {{ form.block_editing(class="checkbox")}}
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: center;">
+        {{ form.submit(id="btn-submit") }}
+      </div>
+
+    {% if form.errors %}
+    <div class="errors_container"> 
+            {% for field_name, field_errors in form.errors.items() %}
+                    {% for error in field_errors %}
+                        <p class="error">{{ error }}</p>
+                    {% endfor %}
+            {% endfor %}
+    </div>
+    {% endif %}
+      
+    </form>
+
+    <div id="infos_site">
+        <h2>🔒 Proteja seu PDF contra cópias e distribuições não autorizadas</h2>
+        <p>
+        Nosso sistema permite que você <strong>envie seu arquivo PDF</strong> e adicione 
+        <strong>camadas de proteção</strong> para dificultar a cópia, redistribuição ou 
+        alteração não autorizada do conteúdo.
+        </p>
+        <p>
+        É uma solução prática e acessível para quem deseja proteger materiais como 
+        ebooks, apostilas, relatórios, contratos ou apresentações.
+        </p>
+
+        <h3>🧾 Como funciona?</h3>
+        <p>1. Você faz o upload do seu PDF.</p>
+        <p>2. Escolhe quais proteções deseja aplicar.</p>
+        <p>3. O sistema processa seu arquivo e devolve um novo PDF com as proteções ativadas.</p>
+
+        <h2>🔐 Funcionalidades disponíveis</h2>
+
+        <h3>✅ Marca d’água personalizada</h3>
+          <p>
+          Adicione uma marca d’água com texto customizado (como seu nome, e-mail ou CPF do comprador ou autor do PDF) 
+          em todas as páginas do PDF. Isso desencoraja o compartilhamento, já que o material 
+          pode ser rastreado até quem o recebeu.
+        </p>
+
+        <h3>✅ Proteção por senha</h3>
+          <p>
+          Exija uma senha para abrir o documento. Essa proteção impede o acesso não autorizado 
+          e é útil quando o conteúdo é confidencial ou vendido.
+        </p>
+
+         <h3>✅ Inserção de metadados</h3>
+          <p>
+          Inclua metadados personalizados como autor, título, assunto e palavras-chave. 
+          Além de organizar melhor o documento, isso pode ajudar no rastreamento e indexação.
+        </p>
+
+        <h3>✅ Permissões restritas</h3>
+          <p>Você pode bloquear funções como:</p>
+          <p>- Impressão do documento</p>
+          <p>- Cópia de texto ou imagens</p>
+          <p>- Edição do conteúdo</p>
+          <p>Essas restrições funcionam com a maioria dos leitores de PDF modernos.</p>
+
+        <h2>⚠️ Importante</h2>
+        <p>
+        As proteções aplicadas <strong>não garantem 100% de segurança contra pirataria</strong>. 
+        Usuários mal-intencionados ainda podem tentar burlar essas barreiras com ferramentas 
+        avançadas ou métodos indiretos (como print da tela, OCR, etc.).  No entanto, essas medidas dificultam significativamente a reprodução não autorizada e <strong>ajudam a inibir o compartilhamento indevido</strong>.
+        </p>
+    </div>
+  </main>
+
+  <footer>
+    <div>
+      <a href="https://github.com/SabrinaGuizilini" target="_blank">
+        By
+        <i class="fab fa-github"></i> Sabrina Guizilini
+      </a>
+    </div>
+  </footer>
+
+  <script>
+    const dropArea = document.getElementById('drop-area');
+    const fileInput = document.getElementById('fileElem');
+    const fileNameDisplay = document.getElementById("filename");
+    const fileNameContainer = document.getElementById("filename-container");
+    const selectPDFContainer = document.getElementById("selectPDF-container");
+    const removeBtn = document.getElementById("remove-pdf");
+
+    dropArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropArea.classList.add('highlight');
+    });
+
+    dropArea.addEventListener('dragleave', () => {
+      dropArea.classList.remove('highlight');
+    });
+
+    dropArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropArea.classList.remove('highlight');
+
+      if (fileInput.disabled) return;
+
+      const files = e.dataTransfer.files;
+      if (files.length > 0 && files[0].type === "application/pdf") {
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(files[0]);
+        fileInput.files = dataTransfer.files;
+        fileInput.dispatchEvent(new Event("change"));
+      } else {
+        alert("Por favor, envie um arquivo PDF válido.");
+      }
+    });
+
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files.length > 0) {
+        fileNameDisplay.textContent = `Arquivo selecionado: ${fileInput.files[0].name}`;
+        selectPDFContainer.style.display = "none";
+        fileNameContainer.style.display = "block";
+      }
+    });
+
+    removeBtn.addEventListener("click", () => {
+      fileInput.value = "";
+      fileInput.disabled = false;
+      fileNameDisplay.textContent = "";
+      selectPDFContainer.style.display = "block";
+      fileNameContainer.style.display = "none";
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+    const options = [
+      { checkboxId: 'chk_marca', iconSelector: '#markwater_option .lock', containerId: 'watermark_container' },
+      { checkboxId: 'chk_senha', iconSelector: '#password_option .lock', containerId: 'password_container' },
+      { checkboxId: 'chk_meta',  iconSelector: '#metadata_option .lock', containerId: 'metadata_container' },
+      { checkboxId: 'chk_perm',  iconSelector: '#permissions_option .lock', containerId: 'permissions_container' }
+    ];
+
+    options.forEach(opt => {
+      const checkbox = document.getElementById(opt.checkboxId);
+      const icon = document.querySelector(opt.iconSelector);
+      const container = document.getElementById(opt.containerId);
+
+      const updateUI = () => {
+          if (checkbox.checked) {
+            icon.classList.remove('fa-lock-open');
+            icon.classList.add('fa-lock');
+            container.style.display = 'block';
+          } else {
+            icon.classList.remove('fa-lock');
+            icon.classList.add('fa-lock-open');
+            container.style.display = 'none';
+          }
+        };
+
+        checkbox.addEventListener('change', updateUI);
+        updateUI();
+      });
+    });
+
+  </script>
+</body>
+</html>
